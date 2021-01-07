@@ -7,13 +7,14 @@
 #define MSGSZ 128
 
 void ipcq_s(int keyi,int mtype, char txt[]);
-void ipcq_r(int keyi,int mtype,char* txt);
+char* ipcq_r(int keyi,int mtype,char* txt);
 
 typedef struct msgbuf {
 	long mtype;
 	char mtext[MSGSZ];
 } message_buf;
 
+message_buf rbuf;
 int main(int argc, char* argv[]) 
 {
 	int key;
@@ -26,10 +27,8 @@ int main(int argc, char* argv[])
 		ipcq_s(key,mtype,argv[3]);
 	} else if (argc==3) {
 		char txt[MSGSZ];
-		ipcq_r(key,mtype,&txt);
-		printf("A point\n");
-		printf("[%s]\n",txt);
-		printf("B Point\n");
+		printf("%s",ipcq_r(key,mtype,txt));
+		// printf("[%s][%s]\n",txt,rbuf.mtext);
 	}
 }
 
@@ -57,11 +56,10 @@ void ipcq_s(int keyi,int mtype, char txt[])
 	}
 }
 
-void ipcq_r(int keyi,int mtype,char* txt)
+char* ipcq_r(int keyi,int mtype,char* txt)
 {
         int msqid;
         key_t key;
-	message_buf rbuf;
         key = keyi;
         if ((msqid = msgget(key, 0666)) < 0) {
                 perror("msgget");
@@ -69,7 +67,8 @@ void ipcq_r(int keyi,int mtype,char* txt)
         if (msgrcv(msqid, &rbuf, MSGSZ, mtype, 0) < 0) {
                 perror("msgrcv");
         }
-	txt = &rbuf.mtext;
-        printf("%s",txt);
+	strcpy( txt , rbuf.mtext);
+        // printf("%s\n",txt);
+	return txt;
 }
 
